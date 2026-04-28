@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>健康环境监测</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="box">
+        <h2>心率｜血氧｜温湿度 实时监控</h2>
+        <div class="row">
+            <div class="item">心率<br><b id="h">--</b> bpm</div>
+            <div class="item">血氧<br><b id="s">--</b> %</div>
+            <div class="item">温度<br><b id="t">--</b> ℃</div>
+            <div class="item">湿度<br><b id="u">--</b> %</div>
+        </div>
+        <div class="chart">
+            <canvas id="c"></canvas>
+        </div>
+    </div>
+<script src="js.js"></script>
+</body>
+</html>
