@@ -1,24 +1,96 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>健康环境监测</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>健康监测 | 心率血氧温湿度实时曲线</title>
+  <!-- 引入Chart.js，用于绘制曲线 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .box {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 22px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+      gap: 15px;
+    }
+    .item {
+      text-align: center;
+      background-color: #f5f7fa;
+      padding: 15px 20px;
+      border-radius: 10px;
+      min-width: 120px;
+    }
+    .item div:first-child {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .item div:last-child {
+      font-size: 24px;
+      font-weight: bold;
+      color: #222;
+    }
+    .chart {
+      width: 100%;
+      height: 300px;
+    }
+  </style>
 </head>
 <body>
-    <div class="box">
-        <h2>心率｜血氧｜温湿度 实时监控</h2>
-        <div class="row">
-            <div class="item">心率<br><b id="h">--</b> bpm</div>
-            <div class="item">血氧<br><b id="s">--</b> %</div>
-            <div class="item">温度<br><b id="t">--</b> ℃</div>
-            <div class="item">湿度<br><b id="u">--</b> %</div>
-        </div>
-        <div class="chart">
-            <canvas id="c"></canvas>
-        </div>
+  <div class="box">
+    <h2>心率 | 血氧 | 温湿度 实时监控</h2>
+    <div class="row">
+      <div class="item">
+        <div>心率<br>bpm</div>
+        <div id="h">--</div>
+      </div>
+      <div class="item">
+        <div>血氧<br>%</div>
+        <div id="s">--</div>
+      </div>
+      <div class="item">
+        <div>温度<br>℃</div>
+        <div id="t">--</div>
+      </div>
+      <div class="item">
+        <div>湿度<br>%</div>
+        <div id="u">--</div>
+      </div>
     </div>
-<script src="js.js"></script>
+    <div class="chart">
+      <canvas id="c"></canvas>
+    </div>
+  </div>
+
+  <script src="js.js"></script>
 </body>
 </html>
