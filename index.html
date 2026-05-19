@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>ESP32健康监测系统</title>
+<title>ESP32 健康实时监测</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{background:#0f1117;color:#fff;padding:20px}
@@ -49,7 +49,7 @@ h1{text-align:center;color:#00ffd5;margin-bottom:30px}
     </div>
 </div>
 
-<!-- 第二部分：4条实时历史趋势曲线（改用你自己的通道，加了读取密钥绕过限制） -->
+<!-- 第二部分：带读取密钥的曲线 -->
 <div class="chart-box">
 <iframe width="100%" height="280" style="border:none;"
 src="https://thingspeak.com/channels/3361176/charts/1?bgcolor=%231c1f26&color=%23ff5555&dynamic=true&results=60&title=温度变化曲线(℃)&type=line&update=15&api_key=C9JIZOBNMW8UQBIK">
@@ -72,17 +72,17 @@ src="https://thingspeak.com/channels/3361176/charts/4?bgcolor=%231c1f26&color=%2
 </div>
 
 <script>
-// 读取ThingSpeak最新实时数值（加读取密钥绕过限制）
+// 带读取密钥的数值请求
 async function showData(){
     const res = await fetch("https://api.thingspeak.com/channels/3361176/feeds/last.json?api_key=C9JIZOBNMW8UQBIK");
     const d = await res.json();
-    document.getElementById("temp").innerText = d.field1+" ℃";
-    document.getElementById("hum").innerText = d.field2+" %";
-    document.getElementById("hr").innerText = d.field3+" bpm";
-    document.getElementById("spo2").innerText = d.field4+" %";
+    document.getElementById("temp").innerText = d.field1 + " ℃";
+    document.getElementById("hum").innerText = d.field2 + " %";
+    document.getElementById("hr").innerText = d.field3 + " bpm";
+    document.getElementById("spo2").innerText = d.field4 + " %";
 }
 showData();
-setInterval(showData,5000); // 5秒刷新一次数值
+setInterval(showData, 5000);
 </script>
 
 </body>
