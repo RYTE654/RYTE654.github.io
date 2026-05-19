@@ -1,127 +1,89 @@
 <!DOCTYPE html>
-<html lang="zh">
-
+<html lang="zh-CN">
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ESP32 健康监测</title>
-
+<title>ESP32健康监测系统</title>
 <style>
-
-body{
-    background:#0f1117;
-    color:white;
-    font-family:Arial;
-    text-align:center;
-    padding-top:40px;
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#0f1117;color:#fff;padding:20px}
+h1{text-align:center;color:#00ffd5;margin-bottom:30px}
+/* 实时数值卡片 */
+.data-box{
+    display:flex;flex-wrap:wrap;gap:15px;
+    justify-content:center;margin-bottom:30px;
 }
-
 .card{
-
-    width:320px;
-
-    margin:auto;
-
-    background:#1c1f26;
-
-    padding:30px;
-
-    border-radius:20px;
-
-    box-shadow:0 0 20px #00ffd5;
+    width:22%;min-width:140px;
+    background:#1c1f26;padding:20px;border-radius:15px;
+    box-shadow:0 0 20px #00ffd540;text-align:center;
 }
-
-h1{
-
-    color:#00ffd5;
+.card h3{margin-bottom:10px;color:#00ffd5}
+.card .num{font-size:28px;font-weight:bold}
+/* 曲线图容器 */
+.chart-box{
+    width:95%;max-width:1000px;margin:15px auto;
+    background:#1c1f26;padding:10px;border-radius:12px;
 }
-
-.data{
-
-    font-size:24px;
-
-    margin:20px 0;
-}
-
-.small{
-
-    color:#999;
-
-    font-size:14px;
-}
-
 </style>
-
 </head>
-
 <body>
+<h1>❤️ ESP32 健康实时监测</h1>
 
-<div class="card">
-
-<h1>健康监测系统</h1>
-
-<div class="data" id="temp">
-温度: --
+<!-- 第一部分：实时最新数值 -->
+<div class="data-box">
+    <div class="card">
+        <h3>🌡️ 温度</h3>
+        <div class="num" id="temp">--</div>
+    </div>
+    <div class="card">
+        <h3>💧 湿度</h3>
+        <div class="num" id="hum">--</div>
+    </div>
+    <div class="card">
+        <h3>❤️ 心率</h3>
+        <div class="num" id="hr">--</div>
+    </div>
+    <div class="card">
+        <h3>🩸 血氧</h3>
+        <div class="num" id="spo2">--</div>
+    </div>
 </div>
 
-<div class="data" id="hum">
-湿度: --
+<!-- 第二部分：4条实时历史趋势曲线 -->
+<div class="chart-box">
+<iframe width="100%" height="280" style="border:none;"
+src="https://thingspeak.com/channels/3361176/charts/1?bgcolor=%231c1f26&color=%23ff5555&dynamic=true&results=60&title=温度变化曲线(℃)&type=line&update=15">
+</iframe>
 </div>
-
-<div class="data" id="hr">
-心率: --
+<div class="chart-box">
+<iframe width="100%" height="280" style="border:none;"
+src="https://thingspeak.com/channels/3361176/charts/2?bgcolor=%231c1f26&color=%233399ff&dynamic=true&results=60&title=湿度变化曲线(%)&type=line&update=15">
+</iframe>
 </div>
-
-<div class="data" id="spo2">
-血氧: --
+<div class="chart-box">
+<iframe width="100%" height="280" style="border:none;"
+src="https://thingspeak.com/channels/3361176/charts/3?bgcolor=%231c1f26&color=%2300ffd5&dynamic=true&results=60&title=心率变化曲线(BPM)&type=line&update=15">
+</iframe>
 </div>
-
-<div class="small">
-ESP32 + MAX30102 + DHT11
-</div>
-
+<div class="chart-box">
+<iframe width="100%" height="280" style="border:none;"
+src="https://thingspeak.com/channels/3361176/charts/4?bgcolor=%231c1f26&color=%23ff9900&dynamic=true&results=60&title=血氧变化曲线(SpO2)&type=line&update=15">
+</iframe>
 </div>
 
 <script>
-
-async function loadData(){
-
-    const url =
-    "https://api.thingspeak.com/channels/3361176/feeds/last.json";
-
-    try{
-
-        const response = await fetch(url);
-
-        const data = await response.json();
-
-        document.getElementById("temp").innerHTML =
-            "温度: " + data.field1 + " °C";
-
-        document.getElementById("hum").innerHTML =
-            "湿度: " + data.field2 + " %";
-
-        document.getElementById("hr").innerHTML =
-            "心率: " + data.field3 + " bpm";
-
-        document.getElementById("spo2").innerHTML =
-            "血氧: " + data.field4 + " %";
-
-    }catch(err){
-
-        console.log(err);
-    }
+// 读取ThingSpeak最新实时数值
+async function showData(){
+    const res = await fetch("https://api.thingspeak.com/channels/3361176/feeds/last.json");
+    const d = await res.json();
+    document.getElementById("temp").innerText = d.field1+" ℃";
+    document.getElementById("hum").innerText = d.field2+" %";
+    document.getElementById("hr").innerText = d.field3+" bpm";
+    document.getElementById("spo2").innerText = d.field4+" %";
 }
-
-loadData();
-
-setInterval(loadData, 5000);
-
+showData();
+setInterval(showData,5000); // 5秒刷新一次数值
 </script>
 
 </body>
-
 </html>
