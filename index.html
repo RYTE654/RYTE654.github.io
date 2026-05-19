@@ -1,96 +1,68 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>健康监测 | 心率血氧温湿度实时曲线</title>
-  <!-- 引入Chart.js，用于绘制曲线 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: "Microsoft YaHei", sans-serif;
-      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .box {
-      background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      padding: 30px;
-      max-width: 800px;
-      width: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 25px;
-      font-size: 22px;
-    }
-    .row {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      margin-bottom: 30px;
-      gap: 15px;
-    }
-    .item {
-      text-align: center;
-      background-color: #f5f7fa;
-      padding: 15px 20px;
-      border-radius: 10px;
-      min-width: 120px;
-    }
-    .item div:first-child {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 8px;
-    }
-    .item div:last-child {
-      font-size: 24px;
-      font-weight: bold;
-      color: #222;
-    }
-    .chart {
-      width: 100%;
-      height: 300px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>健康实时监控</title>
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+    body{background:#0f1117;color:#fff;text-align:center;padding:40px 20px}
+    .container{max-width:380px;margin:0 auto}
+    .card{background:#1c1f26;padding:30px 25px;border-radius:20px;box-shadow:0 0 22px #00ffd5}
+    h1{color:#00ffd5;margin-bottom:25px;font-size:24px}
+    .item{margin:16px 0;font-size:22px;padding:12px;background:rgba(255,255,255,.05);border-radius:10px}
+    .label{color:#ccc}
+    .value{color:#00ffd5;font-weight:700;margin-left:8px}
+    .footer{margin-top:20px;color:#777;font-size:13px}
+</style>
 </head>
 <body>
-  <div class="box">
-    <h2>心率 | 血氧 | 温湿度 实时监控</h2>
-    <div class="row">
-      <div class="item">
-        <div>心率<br>bpm</div>
-        <div id="h">--</div>
-      </div>
-      <div class="item">
-        <div>血氧<br>%</div>
-        <div id="s">--</div>
-      </div>
-      <div class="item">
-        <div>温度<br>℃</div>
-        <div id="t">--</div>
-      </div>
-      <div class="item">
-        <div>湿度<br>%</div>
-        <div id="u">--</div>
-      </div>
+<div class="container">
+    <div class="card">
+        <h1>心率 | 血氧 | 温湿度 实时监控</h1>
+        <div class="item">
+            <span class="label">心率</span>
+            <span class="value" id="hr">--</span> bpm
+        </div>
+        <div class="item">
+            <span class="label">血氧</span>
+            <span class="value" id="spo2">--</span> %
+        </div>
+        <div class="item">
+            <span class="label">温度</span>
+            <span class="value" id="temp">--</span> ℃
+        </div>
+        <div class="item">
+            <span class="label">湿度</span>
+            <span class="value" id="hum">--</span> %
+        </div>
+        <div class="footer">ESP32 + ThingSpeak</div>
     </div>
-    <div class="chart">
-      <canvas id="c"></canvas>
-    </div>
-  </div>
+</div>
 
-  <script src="js.js"></script>
+<script>
+// 你的通道信息
+const CHANNEL_ID = "3361176";
+const API_KEY = ""; // 读数据不需要写key
+
+async function getSensorData() {
+    try {
+        const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        document.getElementById("temp").innerText = data.field1 || "--";
+        document.getElementById("hum").innerText  = data.field2 || "--";
+        document.getElementById("hr").innerText    = data.field3 || "--";
+        document.getElementById("spo2").innerText = data.field4 || "--";
+    } catch (e) {
+        console.log("加载失败", e);
+    }
+}
+
+// 立即加载 + 每5秒刷新
+getSensorData();
+setInterval(getSensorData, 5000);
+</script>
 </body>
 </html>
