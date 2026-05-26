@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>健康监测 | 心率血氧温湿度实时曲线</title>
-  <!-- 引入Chart.js，用于绘制曲线 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- 固定Chart.js版本为4.5.1，避免未来兼容性问题 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
   <style>
     * {
       margin: 0;
@@ -48,6 +48,10 @@
       padding: 15px 20px;
       border-radius: 10px;
       min-width: 120px;
+      transition: transform 0.2s;
+    }
+    .item:hover {
+      transform: translateY(-3px);
     }
     .item div:first-child {
       font-size: 14px;
@@ -62,6 +66,16 @@
     .chart {
       width: 100%;
       height: 300px;
+      background-color: #f5f7fa;
+      border-radius: 10px;
+      padding: 15px;
+    }
+    /* 新增：状态显示区域 */
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
     }
   </style>
 </head>
@@ -89,8 +103,155 @@
     <div class="chart">
       <canvas id="c"></canvas>
     </div>
+    <!-- 新增：状态显示 -->
+    <div class="status" id="status">正在连接ThingSpeak...</div>
   </div>
 
-  <script src="js.js"></script>
+  <script>
+    // 你的ThingSpeak配置（完全正确）
+    const CHANNEL_ID = 3361176;
+    const READ_API_KEY = "C9JIZOBNMW8UQBIK";
+    const REFRESH_INTERVAL = 15000; // 和ESP32上传间隔保持一致
+
+    let heartData = [];
+    let spo2Data = [];
+    let tempData = [];
+    let humData = [];
+    let labels = [];
+    const MAX_DATA_POINTS = 40;
+
+    // 初始化图表（适配你的浅色主题）
+    function initChart() {
+      const ctx = document.getElementById("c").getContext("2d");
+      window.chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "心率 (次/分)",
+              data: heartData,
+              borderColor: "#dc3545",
+              backgroundColor: "rgba(220, 53, 69, 0.1)",
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3
+            },
+            {
+              label: "血氧 (%)",
+              data: spo2Data,
+              borderColor: "#28a745",
+              backgroundColor: "rgba(40, 167, 69, 0.1)",
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3
+            },
+            {
+              label: "温度 (℃)",
+              data: tempData,
+              borderColor: "#007bff",
+              backgroundColor: "rgba(0, 123, 255, 0.1)",
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3
+            },
+            {
+              label: "湿度 (%)",
+              data: humData,
+              borderColor: "#ffc107",
+              backgroundColor: "rgba(255, 193, 7, 0.1)",
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                font: { size: 14 }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                color: "rgba(0,0,0,0.05)"
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 修复后的数据拉取函数（解决0和--显示问题）
+    function fetchData() {
+      const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json?api_key=${READ_API_KEY}`;
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error("网络请求失败");
+          return response.json();
+        })
+        .then(data => {
+          console.log("获取到的数据:", data);
+          document.getElementById("status").textContent = `最后更新: ${new Date().toLocaleString()}`;
+
+          // 正确处理空值和0值，显示--而不是0
+          const heart = data.field3 && Number(data.field3) > 0 ? Number(data.field3) : null;
+          const spo2 = data.field4 && Number(data.field4) > 0 ? Number(data.field4) : null;
+          const temp = data.field1 && Number(data.field1) > 0 ? Number(data.field1) : null;
+          const hum = data.field2 && Number(data.field2) > 0 ? Number(data.field2) : null;
+
+          // 更新卡片显示
+          document.getElementById("h").textContent = heart ? heart : "--";
+          document.getElementById("s").textContent = spo2 ? spo2 : "--";
+          document.getElementById("t").textContent = temp ? temp.toFixed(1) : "--";
+          document.getElementById("u").textContent = hum ? hum.toFixed(1) : "--";
+
+          // 只有有效数据才加入图表
+          if (heart && spo2 && temp && hum) {
+            const now = new Date();
+            labels.push(now.toLocaleTimeString());
+            heartData.push(heart);
+            spo2Data.push(spo2);
+            tempData.push(temp);
+            humData.push(hum);
+
+            // 限制数据点数量，避免图表太挤
+            while (labels.length > MAX_DATA_POINTS) {
+              labels.shift();
+              heartData.shift();
+              spo2Data.shift();
+              tempData.shift();
+              humData.shift();
+            }
+
+            window.chart.update();
+          }
+        })
+        .catch(error => {
+          console.error("拉取数据出错:", error);
+          document.getElementById("status").textContent = "连接失败，15秒后重试...";
+        });
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener("DOMContentLoaded", () => {
+      initChart();
+      fetchData();
+      setInterval(fetchData, REFRESH_INTERVAL);
+    });
+  </script>
 </body>
 </html>
