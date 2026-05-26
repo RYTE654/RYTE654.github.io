@@ -3,94 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>健康监测 | 实时监控</title>
+  <title>健康监测 | 心率血氧温湿度实时曲线</title>
+  <!-- 引入Chart.js，用于绘制曲线 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"></script>
   <style>
-    * {margin:0;padding:0;box-sizing:border-box}
-    body {font-family:Microsoft YaHei;background:linear-gradient(135deg,#1a2a6c,#b21f1f,#fdbb2d);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
-    .box {background:rgba(255,255,255,.95);border-radius:16px;padding:30px;max-width:800px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-    h2 {text-align:center;color:#333;margin-bottom:25px}
-    .row {display:flex;justify-content:space-around;flex-wrap:wrap;margin-bottom:30px;gap:15px}
-    .item {text-align:center;background:#f5f7fa;padding:15px 20px;border-radius:10px;min-width:120px}
-    .item .label {font-size:14px;color:#666;margin-bottom:8px}
-    .item .value {font-size:24px;font-weight:bold;color:#222}
-    .chart {width:100%;height:300px;background:#f5f7fa;border-radius:10px;padding:15px}
-    .status {text-align:center;margin-top:15px;color:#666}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .box {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 22px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+      gap: 15px;
+    }
+    .item {
+      text-align: center;
+      background-color: #f5f7fa;
+      padding: 15px 20px;
+      border-radius: 10px;
+      min-width: 120px;
+    }
+    .item div:first-child {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .item div:last-child {
+      font-size: 24px;
+      font-weight: bold;
+      color: #222;
+    }
+    .chart {
+      width: 100%;
+      height: 300px;
+    }
   </style>
 </head>
 <body>
-<div class="box">
-  <h2>心率 | 血氧 | 温湿度 实时监控</h2>
-  <div class="row">
-    <div class="item"><div class="label">心率<br>bpm</div><div id="hr" class="value">--</div></div>
-    <div class="item"><div class="label">血氧<br>%</div><div id="spo2" class="value">--</div></div>
-    <div class="item"><div class="label">温度<br>℃</div><div id="temp" class="value">--</div></div>
-    <div class="item"><div class="label">湿度<br>%</div><div id="hum" class="value">--</div></div>
+  <div class="box">
+    <h2>心率 | 血氧 | 温湿度 实时监控</h2>
+    <div class="row">
+      <div class="item">
+        <div>心率<br>bpm</div>
+        <div id="h">--</div>
+      </div>
+      <div class="item">
+        <div>血氧<br>%</div>
+        <div id="s">--</div>
+      </div>
+      <div class="item">
+        <div>温度<br>℃</div>
+        <div id="t">--</div>
+      </div>
+      <div class="item">
+        <div>湿度<br>%</div>
+        <div id="u">--</div>
+      </div>
+    </div>
+    <div class="chart">
+      <canvas id="c"></canvas>
+    </div>
   </div>
-  <div class="chart"><canvas id="chart"></canvas></div>
-  <div class="status" id="status">正在连接...</div>
-</div>
 
-<script>
-const options = {
-  host: 'ua81515f.ala.eu-central-1.emqxsl.com',
-  port: 8084,
-  username: 'ryte',
-  password: 'carol060613',
-  protocol: 'wss'
-};
-const TOPIC = 'sensor/data';
-
-const client = mqtt.connect(options);
-let chart;
-let labels = [], hrData = [], spo2Data = [], tempData = [], humData = [];
-const MAX_POINTS = 50;
-
-function initChart() {
-  const ctx = document.getElementById('chart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: '心率', data: hrData, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.1)', fill: true, tension: 0.4 },
-        { label: '血氧', data: spo2Data, borderColor: 'green', backgroundColor: 'rgba(0,255,0,0.1)', fill: true, tension: 0.4 },
-        { label: '温度', data: tempData, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.1)', fill: true, tension: 0.4 },
-        { label: '湿度', data: humData, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.1)', fill: true, tension: 0.4 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-client.on('connect', () => {
-  document.getElementById('status').innerText = '✅ 已连接，实时接收数据';
-  client.subscribe(TOPIC);
-});
-
-client.on('message', (topic, message) => {
-  const data = JSON.parse(message.toString());
-  
-  document.getElementById('hr').innerText = data.hr;
-  document.getElementById('spo2').innerText = data.spo2;
-  document.getElementById('temp').innerText = data.temp.toFixed(1);
-  document.getElementById('hum').innerText = data.hum.toFixed(1);
-  
-  const time = new Date().toLocaleTimeString();
-  labels.push(time);
-  hrData.push(data.hr);
-  spo2Data.push(data.spo2);
-  tempData.push(data.temp);
-  humData.push(data.hum);
-  
-  if (labels.length > MAX_POINTS) {
-    labels.shift(); hrData.shift(); spo2Data.shift(); tempData.shift(); humData.shift();
-  }
-  chart.update();
-});
-
-window.onload = initChart;
-</script>
+  <script src="js.js"></script>
 </body>
 </html>
